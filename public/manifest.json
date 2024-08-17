@@ -1,0 +1,10 @@
+{
+  "short_name": "Proximity Service",
+  "name": "Proximity Service project",
+  "icons": [
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

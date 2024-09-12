@@ -140,17 +140,13 @@ Leveraging coorindates as cache keys might not be the best. Coordinates from pho
 We could hash based off of geohashing to get a cluster per location that will be consistent. Hash by the nearest cluster per say.
 
 **Should we use Redis or Mongo?**
-In terms of availability MongoDB scales well. Apparently ![Redis doesn't support ACID operations](https://tinyurl.com/2hhx4k9n).
+In terms of availability MongoDB scales well. Apparently [Redis doesn't support ACID operations](https://tinyurl.com/2hhx4k9n).
 I'm going to stick to Mongo because I've used it before.
 
 Frontend
 ```
 async function fetchBusinessData(url, business_id):
-    const cached_data = await db.collection.find(
-        {
-            'business_id': business_id
-        }
-    );
+    const cached_data = await mongoUtils.get(url, business_id);
 
     if not cached_data:
         const response = await utils.fetchPy(`${Constants.FUSHION_BASE_URL}/businesses/${business_id}');
@@ -158,7 +154,7 @@ async function fetchBusinessData(url, business_id):
         if (data.statusCode == 200) {
             return data;
         } else {
-            utils.handleThirdPartyError(data);
+            genUtils.handleThirdPartyError(data);
             return null;            
         }
     else:
@@ -169,8 +165,13 @@ Backend - similar in structure just in python
 ```
 def fetchBusinessData(url):
     # fetch from Yelp
-    response = requests.Get(`${Constants.FUSHION_BASE_URL}/businesses/${business_id}');        
-    return response.json()
+    response = requests.Get(`${Constants.FUSHION_BASE_URL}/businesses/${business_id}');
+    data = response.json()
+    db.collection.insert({
+        'business_id': data['id'],
+        'name': data['NAME']
+    })
+    return data
 ```
 
 ### Region and availability zones
@@ -178,5 +179,5 @@ def fetchBusinessData(url):
 
 
 ## Resources
-- ![System Design Interview v2 by Alex Xu & Sahn Lam](https://bytebytego.com/)
-- ![MongoDB vs Redis by Amazon](https://aws.amazon.com/compare/the-difference-between-redis-and-mongodb/#:~:text=Conversely%2C%20Redis%20does%20not%20provide,alone%20isn't%20a%20solution.)
+- [System Design Interview v2 by Alex Xu & Sahn Lam](https://bytebytego.com/)
+- [MongoDB vs Redis by Amazon](https://aws.amazon.com/compare/the-difference-between-redis-and-mongodb/#:~:text=Conversely%2C%20Redis%20does%20not%20provide,alone%20isn't%20a%20solution.)
